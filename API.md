@@ -2,8 +2,8 @@
 
 Two things:
 
-1. **API** — programmatic access to Hyperliquid validator data, the same data that powers the dashboard.
-2. **Reports** — independent audit deliverables produced by QuickNode Hyperliquid Staking Intelligence for institutional consumers.
+1. **API**: programmatic access to Hyperliquid validator data (the same data that powers the dashboard).
+2. **Reports**: independent audit deliverables produced by QuickNode Hyperliquid Staking Intelligence for institutional consumers.
 
 ## API
 
@@ -119,18 +119,18 @@ For treasuries, direct stakers, custody operations, and risk teams holding HYPE 
 
 **Contents**
 
-- **Composite portfolio score** (0–100) — stake-weighted blend across the institution's holdings.
+- **Composite portfolio score** (0–100), stake-weighted blend across the institution's holdings.
 - **Sub-score breakdown**:
-  - **Reliability** (50% weight) — 30-day uptime, jail event count, longest jail, reward variance, time since last incident.
-  - **Stake Quality** (25% weight) — delegator count, net stake flow, retention, concentration.
-  - **Yield Quality** (25% weight) — commission-adjusted realized APR, APR consistency, tracking error vs theoretical.
-- **30-day performance summary** — aggregate uptime, net realized APR, jail incidents, validators monitored.
-- **Portfolio composition table** — per-validator allocation, individual sub-scores, individual composite.
-- **Position notes** — narrative flags for holdings-specific concerns (elevated commission rates, pre-jail degradation indicators, anomalous yield drag).
+  - **Reliability** (50% weight), 30-day uptime, jail event count, longest jail, reward variance, time since last incident.
+  - **Stake Quality** (25% weight), delegator count, net stake flow, retention, concentration.
+  - **Yield Quality** (25% weight), commission-adjusted realized APR, APR consistency, tracking error vs theoretical.
+- **30-day performance summary**: aggregate uptime, net realized APR, jail incidents, validators monitored.
+- **Portfolio composition table**: per-validator allocation, individual sub-scores, individual composite.
+- **Position notes**: narrative flags for holdings-specific concerns (elevated commission rates, pre-jail degradation indicators, anomalous yield drag).
 - **Risk exposure assessment**:
-  - **Halt-quorum exposure** — whether the holding's validators sit within the smallest set reaching the `>⅓` threshold of total network stake.
-  - **Jail recovery exposure** — exposure to long-tail jail events relative to the network base rate.
-  - **Commission risk** — bounds on future commission increases per Hyperliquid protocol rules.
+  - **Halt-quorum exposure**: whether the holding's validators sit within the smallest set reaching the `>⅓` threshold of total network stake.
+  - **Jail recovery exposure**: exposure to long-tail jail events relative to the network base rate.
+  - **Commission risk**: bounds on future commission increases per Hyperliquid protocol rules.
 - **Methodology and limitations summary** with version pin.
 
 ### LST Portfolio Audit
@@ -149,19 +149,19 @@ For LST issuers, holders performing due diligence, and consumers (DeFi protocols
   - Portfolio concentration (top-3 share, against theoretical maximum diversification across the active set).
   - Portfolio composite score (stake-weighted) vs network median and the lowest-scored LST in the coverage universe.
   - Reliability across portfolio (aggregate uptime, jail event count over the data window).
-- **Headline metrics** — composite, aggregate uptime, top-3 concentration, realized APR after commission.
-- **Validator portfolio table** — per-delegation weight, uptime, individual composite.
-- **Network benchmark** — portfolio metrics vs network median and theoretical max.
+- **Headline metrics**: composite, aggregate uptime, top-3 concentration, realized APR after commission.
+- **Validator portfolio table**: per-delegation weight, uptime, individual composite.
+- **Network benchmark**: portfolio metrics vs network median and theoretical max.
 - **Methodology and limitations summary** with version pin.
 
 ### What every report includes
 
 - **Methodology version** (currently `v0.1.0`) tied to the published methodology document.
 - **sha256 hash** of the methodology bytes for verification (`sha256:7a4c2f…b819e` in current samples).
-- **Data sources** — QuickNode SQL Explorer + gRPC stream, with the cluster ID and reporting window.
+- **Data sources**: QuickNode SQL Explorer + gRPC stream, with the cluster ID and reporting window.
 - **Report timestamp** in UTC.
 - **Document ID** for reference.
-- **Issuer** — QuickNode Hyperliquid Staking Intelligence.
+- **Issuer**: QuickNode Hyperliquid Staking Intelligence.
 
 Audit consumers can verify any score in the report by cross-referencing the published methodology document at the matching version, the on-chain data via the cited QuickNode endpoints, and the methodology hash.
 
@@ -171,4 +171,4 @@ Reports are produced on engagement. For validator quality attestations, LST port
 
 ## See also
 
-- [Methodology](/methodology) — full scoring methodology, sub-score weights and formulas, consensus terminology citations.
+- [Methodology](/methodology), full scoring methodology, sub-score weights and formulas, consensus terminology citations.
