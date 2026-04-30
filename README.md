@@ -119,23 +119,24 @@ See [API.md](./API.md) (rendered at `/docs`) for the full reference. Quick orien
 5. **Browser** uses one shared `EventSource` (singleton in `grpc-client.ts`) regardless of how many components subscribe, dispatching to per-hook subscribers.
 6. **Selection / hover** flows through React Context provided by `dashboard-shell.tsx` so the Quorum Ring and StakeConcentrationBar are two-way coupled.
 
-## TODO
+## Toward production
 
-### Wiring
-- [x] **Real gRPC for blocks.** `LiveEmitter` connects to `QUICKNODE_GRPC_URL` over TLS, subscribes to the `BLOCKS` stream type via `Streaming.StreamData` with `x-token` metadata, and emits real block events. Proto file at `proto/hyperliquid.proto`.
-- [x] **gRPC for staking events.** `extractStakingActions` parses `CDeposit` / `CWithdrawal` / `Delegation` (and `undelegate` variants) out of each block JSON payload as it arrives, with conservative validation: any field that doesn't match (hex address, known event-type string) is dropped, never guessed. SQL polling on `stakingEvents` (60s) runs as a safety net; both paths share `seenStakingKeys` for dedup.
-- [x] **SQL Explorer response envelope.** QuickNode SQL Explorer returns ClickHouse-format JSON: `{ meta: [...], data: [...], rows: <count>, statistics: {...} }`. Wrapper now extracts `data` (the row array) and accepts bare arrays as a defensive fallback. If the upstream contract changes again, the thrown error includes a sample of the response so the wrapper can be re-narrowed.
+The current build covers the institutional dashboard, the public scoring methodology, and the live data plumbing (real gRPC for blocks and staking, SQL fallback in parallel, ClickHouse-format response handling). Items remaining before a production deployment:
 
-### Scoring refinements (data-dependent)
-See [LIMITATIONS.md](./LIMITATIONS.md) for the full list of components currently on partial credit and what each one needs to ship.
+### Scoring completeness
+Several scoring components currently receive midpoint partial credit because the derived data series isn't yet aggregated. See [LIMITATIONS.md](./LIMITATIONS.md) for the full list and what each one needs to ship. Once those land, increment `METHODOLOGY_VERSION` in `lib/scoring/score.ts`.
 
-### Phase 2
-- LST portfolio scoring (Kinetiq, Valantis, Hyperbeat), needs contract addresses on chain.
+### Product surface
+- LST portfolio scoring (Kinetiq, Valantis, Hyperbeat). Needs contract addresses on chain.
 - HIP-3 deployer scoring.
-- Attestation-report PDF generator.
-- Historical exports (CSV/JSON).
-- Auth & API tier gating.
-- Email / webhook alert pipeline.
+- Attestation-report PDF generator (the templates the audit deliverables described in `/docs` are produced from).
+- Historical exports (CSV/JSON) for institutional consumers who want raw data alongside the scored output.
+
+### Operational
+- Auth & API tier gating on `/api/sql` and `/api/grpc` (free / paid / enterprise).
+- Email / webhook alert pipeline for jail events, threshold-crossing concentration changes, and significant whale flows.
+- Rate limiting and per-tenant quotas at the route level.
+- Production observability (request tracing, gRPC reconnect metrics, SQL query latency histograms).
 
 ## Design decisions worth knowing
 
