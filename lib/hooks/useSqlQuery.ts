@@ -11,6 +11,7 @@ const DEFAULT_INTERVALS: Record<QueryName, number> = {
   stakingEvents: 30_000,
   jailHistory: 5 * 60_000,
   blockPulse: 5_000,
+  userStakingHistory: 60_000,
 };
 
 export interface UseSqlQueryOptions<K extends QueryName> {

@@ -123,8 +123,8 @@ See [API.md](./API.md) (rendered at `/docs`) for the full reference. Quick orien
 
 ### Wiring
 - [x] **Real gRPC for blocks.** `LiveEmitter` connects to `QUICKNODE_GRPC_URL` over TLS, subscribes to the `BLOCKS` stream type via `Streaming.StreamData` with `x-token` metadata, and emits real block events. Proto file at `proto/hyperliquid.proto`.
-- [ ] **gRPC for staking events.** `EVENTS` stream type is funding/liquidations per docs, not staking. Could subscribe to `BLOCKS` and parse staking transactions out of each block JSON; for now we keep the 60s SQL polling for `stakingEvents`.
-- [ ] **SQL Explorer response envelope.** Wrapper currently tolerates `{rows}`, `{data}`, `{result}`, or bare arrays. Narrow once the contract is fully nailed down.
+- [x] **gRPC for staking events.** `extractStakingActions` parses `CDeposit` / `CWithdrawal` / `Delegation` (and `undelegate` variants) out of each block JSON payload as it arrives, with conservative validation — any field that doesn't match (hex address, known event-type string) is dropped, never guessed. SQL polling on `stakingEvents` (60s) runs as a safety net; both paths share `seenStakingKeys` for dedup.
+- [x] **SQL Explorer response envelope.** QuickNode SQL Explorer returns ClickHouse-format JSON: `{ meta: [...], data: [...], rows: <count>, statistics: {...} }`. Wrapper now extracts `data` (the row array) and accepts bare arrays as a defensive fallback. If the upstream contract changes again, the thrown error includes a sample of the response so the wrapper can be re-narrowed.
 
 ### Scoring refinements (data-dependent)
 See [LIMITATIONS.md](./LIMITATIONS.md) for the full list of components currently on partial credit and what each one needs to ship.

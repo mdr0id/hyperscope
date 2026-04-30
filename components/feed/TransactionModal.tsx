@@ -223,12 +223,6 @@ function Field({
 }) {
   const [copied, setCopied] = useState(false);
   const display = displayOverride ?? shortAddress(value);
-  const internalHref =
-    kind === "user"
-      ? `/user/${value}`
-      : kind === "validator"
-        ? `/validator/${value}`
-        : null;
 
   const handleCopy = async () => {
     try {
@@ -261,9 +255,17 @@ function Field({
             <Copy className="h-3 w-3" />
           )}
         </button>
-        {internalHref ? (
+        {kind === "user" ? (
           <Link
-            href={internalHref}
+            href={`/user/${value}`}
+            aria-label={`Open ${label}`}
+            className="rounded p-1 text-muted-foreground transition hover:bg-card hover:text-foreground"
+          >
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+        ) : kind === "validator" ? (
+          <Link
+            href={`/validator/${value}`}
             aria-label={`Open ${label}`}
             className="rounded p-1 text-muted-foreground transition hover:bg-card hover:text-foreground"
           >

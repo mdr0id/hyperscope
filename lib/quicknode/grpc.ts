@@ -94,9 +94,11 @@ class LiveEmitter {
   private blockSqlPolling = false;
   private blockSqlEmitCount = 0;
 
-  // Staking events (SQL only)
+  // Staking events (gRPC primary via BLOCKS-derived parsing + SQL fallback)
   private stakingTimer: ReturnType<typeof setTimeout> | null = null;
   private stakingPolling = false;
+  private firstStakingPollDone = false;
+  private firstBlockJsonLogged = false;
 
   subscribe(fn: GrpcSubscriber): () => void {
     this.subscribers.add(fn);
@@ -132,6 +134,8 @@ class LiveEmitter {
     console.log(
       `[hyperscope] stopping LiveEmitter · grpc=${this.grpcEventCount} sql=${this.blockSqlEmitCount} blocks emitted`,
     );
+    this.firstStakingPollDone = false;
+    this.firstBlockJsonLogged = false;
     if (this.grpcCall) {
       try {
         this.grpcCall.cancel();
@@ -282,6 +286,17 @@ class LiveEmitter {
     if (this.grpcEventCount === 0) {
       console.log(`[hyperscope] gRPC: first block received #${blockNumber}`);
     }
+    if (
+      !this.firstBlockJsonLogged &&
+      parsed &&
+      typeof parsed === "object"
+    ) {
+      this.firstBlockJsonLogged = true;
+      console.log(
+        `[hyperscope] gRPC: first block JSON top-level keys =`,
+        Object.keys(parsed as Record<string, unknown>),
+      );
+    }
     this.grpcEventCount += 1;
 
     this.broadcast({
@@ -291,6 +306,30 @@ class LiveEmitter {
       fillsCount,
       ordersCount,
     });
+
+    if (parsed) {
+      const stakingActions = extractStakingActions(parsed);
+      if (stakingActions.length > 0) {
+        for (const action of stakingActions) {
+          const key = stakingKeyFromAction(blockNumber, action);
+          if (this.seenStakingKeys.has(key)) continue;
+          this.seenStakingKeys.add(key);
+          this.broadcast({
+            type: "staking",
+            blockTime,
+            blockNumber,
+            hash: "",
+            eventType: action.eventType,
+            user: action.user,
+            validator: action.validator,
+            amount: action.amount,
+            isUndelegate: action.isUndelegate,
+            isFinalized: true,
+          });
+        }
+        this.trimSeenStaking();
+      }
+    }
   }
 
   private scheduleReconnect(): void {
@@ -409,7 +448,10 @@ class LiveEmitter {
       const sorted = [...rows].sort(
         (a, b) => a.block_number - b.block_number,
       );
-      const isFirstPoll = this.seenStakingKeys.size === 0;
+      // First SQL poll silently populates seenStakingKeys (backfill, not live)
+      // regardless of whether gRPC has already added entries.
+      const isFirstPoll = !this.firstStakingPollDone;
+      this.firstStakingPollDone = true;
       for (const row of sorted) {
         const key = stakingKey(row);
         if (this.seenStakingKeys.has(key)) continue;
@@ -513,6 +555,158 @@ function stakingKey(row: StakingEventRow): string {
   ].join("-");
 }
 
+interface ExtractedStakingAction {
+  eventType: "CDeposit" | "CWithdrawal" | "Delegation";
+  user: string;
+  validator: string | null;
+  amount: string;
+  isUndelegate: boolean | null;
+}
+
+const HEX_ADDR_RE = /^0x[0-9a-f]{40}$/;
+
+function stakingKeyFromAction(
+  blockNumber: number,
+  action: ExtractedStakingAction,
+): string {
+  return [
+    blockNumber,
+    action.eventType,
+    action.user,
+    action.validator ?? "none",
+    action.amount,
+    action.isUndelegate === null ? "n" : action.isUndelegate ? "1" : "0",
+  ].join("-");
+}
+
+// Best-effort extraction of staking program actions out of a raw block JSON
+// payload. Tries multiple structural variants (transactions live at slightly
+// different keys depending on Hyperliquid release / replica command vs. user
+// action). Conservative: any field that doesn't validate is dropped, never
+// guessed. The SQL `stakingEvents` poll runs in parallel as a safety net for
+// anything this misses, deduped via the shared seenStakingKeys set.
+function extractStakingActions(parsed: unknown): ExtractedStakingAction[] {
+  if (!parsed || typeof parsed !== "object") return [];
+  const obj = parsed as Record<string, unknown>;
+
+  const lists: unknown[][] = [];
+  for (const key of [
+    "txs",
+    "transactions",
+    "actions",
+    "user_actions",
+    "replica_cmds",
+    "events",
+  ]) {
+    if (Array.isArray(obj[key])) lists.push(obj[key] as unknown[]);
+  }
+
+  const out: ExtractedStakingAction[] = [];
+  for (const list of lists) {
+    for (const raw of list) {
+      const candidate = matchStakingAction(raw);
+      if (candidate) out.push(candidate);
+    }
+  }
+  return out;
+}
+
+function matchStakingAction(raw: unknown): ExtractedStakingAction | null {
+  if (!raw || typeof raw !== "object") return null;
+  const tx = raw as Record<string, unknown>;
+
+  let payload: Record<string, unknown> = tx;
+  if (tx.action && typeof tx.action === "object") {
+    payload = tx.action as Record<string, unknown>;
+  }
+
+  const typeRaw =
+    pickString(payload, "type") ??
+    pickString(payload, "action") ??
+    pickString(tx, "type");
+  if (!typeRaw) return null;
+
+  const lower = typeRaw.toLowerCase();
+  let eventType: ExtractedStakingAction["eventType"] | null = null;
+  let isUndelegate: boolean | null = null;
+
+  if (lower === "cdeposit" || lower === "deposit") {
+    eventType = "CDeposit";
+  } else if (
+    lower === "cwithdrawal" ||
+    lower === "cwithdraw" ||
+    lower === "withdrawal" ||
+    lower === "withdraw"
+  ) {
+    eventType = "CWithdrawal";
+  } else if (lower === "delegate" || lower === "tokendelegate") {
+    eventType = "Delegation";
+    isUndelegate = false;
+  } else if (lower === "undelegate" || lower === "tokenundelegate") {
+    eventType = "Delegation";
+    isUndelegate = true;
+  } else if (lower === "delegation") {
+    const flag = pickBool(payload, "is_undelegate") ?? pickBool(tx, "is_undelegate");
+    if (flag === null) return null;
+    eventType = "Delegation";
+    isUndelegate = flag;
+  }
+  if (!eventType) return null;
+
+  const userRaw =
+    pickString(tx, "user") ??
+    pickString(tx, "signer") ??
+    pickString(payload, "user") ??
+    pickString(payload, "signer");
+  if (!userRaw) return null;
+  const user = userRaw.toLowerCase();
+  if (!HEX_ADDR_RE.test(user)) return null;
+
+  const validatorRaw =
+    pickString(tx, "validator") ?? pickString(payload, "validator");
+  let validator: string | null = null;
+  if (validatorRaw) {
+    const lc = validatorRaw.toLowerCase();
+    if (HEX_ADDR_RE.test(lc)) validator = lc;
+  }
+
+  const amountRaw =
+    pickStringOrNumber(tx, "amount") ??
+    pickStringOrNumber(payload, "amount") ??
+    pickStringOrNumber(tx, "wei") ??
+    pickStringOrNumber(payload, "wei");
+  if (amountRaw == null) return null;
+  const amount =
+    typeof amountRaw === "string" ? amountRaw : amountRaw.toString();
+
+  return { eventType, user, validator, amount, isUndelegate };
+}
+
+function pickString(
+  obj: Record<string, unknown>,
+  key: string,
+): string | undefined {
+  const v = obj[key];
+  return typeof v === "string" ? v : undefined;
+}
+
+function pickBool(
+  obj: Record<string, unknown>,
+  key: string,
+): boolean | null {
+  const v = obj[key];
+  return typeof v === "boolean" ? v : null;
+}
+
+function pickStringOrNumber(
+  obj: Record<string, unknown>,
+  key: string,
+): string | number | undefined {
+  const v = obj[key];
+  if (typeof v === "string" || typeof v === "number") return v;
+  return undefined;
+}
+
 declare global {
   var __liveEmitter: LiveEmitter | undefined;
 }
@@ -532,9 +726,17 @@ if (process.env.NODE_ENV !== "production") {
 //      Both paths share a `seenBlocks` Set, so whichever reports a given block
 //      first is the one users see; the other path's later report is suppressed.
 //
-// Staking events come from SQL polling on `stakingEvents` (60s cadence). The
-// gRPC EVENTS stream is funding/liquidations per QuickNode docs, not the
-// staking program (CDeposit / CWithdrawal / Delegation).
+// Live staking events:
+//   1. Primary path: extracted from each BLOCKS gRPC payload via
+//      `extractStakingActions`. Matches CDeposit / CWithdrawal / Delegation /
+//      undelegate variants conservatively (any unrecognized field is dropped,
+//      never guessed). Emitted with isFinalized: true since gRPC delivers
+//      finalized blocks.
+//   2. Safety net: SQL polling on `stakingEvents` every 60s. Shared
+//      `seenStakingKeys` Set dedupes between the two paths so anything the
+//      block-JSON parser misses is filled in within a minute.
+//   The EVENTS stream type in the proto is funding/liquidations per QuickNode
+//   docs, not staking program actions, so we don't subscribe to it.
 //
 // Reward events are intentionally not emitted: rewards are minute-aggregated in
 // QuickNode SQL, so live per-validator reward emission would be misleading.

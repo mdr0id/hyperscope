@@ -109,16 +109,22 @@ async function executeSql(sql: string, signal?: AbortSignal): Promise<unknown[]>
     );
   }
 
-  if (Array.isArray(parsed)) return parsed;
-  if (parsed && typeof parsed === "object") {
-    const obj = parsed as Record<string, unknown>;
-    if (Array.isArray(obj.rows)) return obj.rows;
-    if (Array.isArray(obj.data)) return obj.data;
-    if (Array.isArray(obj.result)) return obj.result;
+  // QuickNode SQL Explorer wraps responses in ClickHouse JSON format:
+  //   { meta: [{name, type}, ...], data: [{col: value, ...}, ...], rows: N, statistics: {...} }
+  // The `data` key holds the rows; `rows` is the row count, not the data.
+  // We also accept bare arrays defensively (some endpoints/queries may return
+  // them directly).
+  if (
+    parsed &&
+    typeof parsed === "object" &&
+    Array.isArray((parsed as { data?: unknown }).data)
+  ) {
+    return (parsed as { data: unknown[] }).data;
   }
+  if (Array.isArray(parsed)) return parsed;
   throw new QuickNodeSqlError(
     res.status,
-    `Unexpected response shape: ${text.slice(0, 240)}`,
+    `Expected QuickNode SQL response as { data: [...] } (ClickHouse format) or a bare array, got: ${text.slice(0, 240)}`,
   );
 }
 
