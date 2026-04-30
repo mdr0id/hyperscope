@@ -7,11 +7,11 @@ Two things:
 
 ## API
 
-Two read-only endpoints. Sourced from QuickNode SQL Explorer (212-day historical depth) and QuickNode gRPC (live).
+Two read only endpoints. Sourced from QuickNode SQL Explorer (212-day historical depth) and QuickNode gRPC (live).
 
 ### `POST /api/sql`
 
-Fetch a named query against Hyperliquid's on-chain data.
+Fetch a named query against Hyperliquid's on chain data.
 
 ```bash
 curl -X POST http://localhost:3000/api/sql \
@@ -35,12 +35,12 @@ curl -X POST http://localhost:3000/api/sql \
 |----------------------|----------------------------------------------------------------------------------|
 | `validatorScorecard` | One row per validator: stake, commission, delegator count, 24h reward, uptime, status |
 | `stakeConcentration` | Active set ranked by stake, with stake share and cumulative percentage           |
-| `validatorHeartbeat` | Per-validator binary earning indicator at 1-minute resolution over the last 60 minutes |
+| `validatorHeartbeat` | Per validator binary earning indicator at 1-minute resolution over the last 60 minutes |
 | `stakingEvents`      | Last 4 hours of `CDeposit` / `CWithdrawal` / `Delegation` events (limit 100)     |
 | `jailHistory`        | Jail streaks (≥30 minutes) across the full 212-day window                        |
 | `blockPulse`         | Last 1 minute of blocks (block number, time, fills, orders)                      |
 
-`bypassCache` (optional) skips the in-memory TTL cache for that single call. Per-query TTLs run from 5 seconds (`blockPulse`) to 5 minutes (`jailHistory`).
+`bypassCache` (optional) skips the in memory TTL cache for that single call. Per query TTLs run from 5 seconds (`blockPulse`) to 5 minutes (`jailHistory`).
 
 **Response**
 
@@ -80,7 +80,7 @@ curl -X POST http://localhost:3000/api/sql \
 
 ### `GET /api/grpc`
 
-Server-Sent Events stream of live block and staking events.
+Server Sent Events stream of live block and staking events.
 
 ```bash
 curl -N http://localhost:3000/api/grpc
@@ -99,11 +99,11 @@ data: {"type":"staking","blockTime":"2026-04-29T18:37:00.061Z","blockNumber":978
 : hb
 ```
 
-`block` events arrive at the cluster's block rate (~13/sec). `staking` events arrive whenever new on-chain staking activity is detected. `: hb` is a keepalive comment sent every 15 seconds.
+`block` events arrive at the cluster's block rate (~13/sec). `staking` events arrive whenever new on chain staking activity is detected. `: hb` is a keepalive comment sent every 15 seconds.
 
 ## Reports
 
-QuickNode Hyperliquid Staking Intelligence produces independent audit reports for institutional consumers using Hyperscope's methodology and data. Reports are delivered as signed PDFs with a verifiable methodology hash and primary-source attribution.
+QuickNode Hyperliquid Staking Intelligence produces independent audit reports for institutional consumers using Hyperscope's methodology and data. Reports are delivered as signed PDFs with a verifiable methodology hash and primary source attribution.
 
 Two report types are routinely available; bespoke engagements are scoped on request.
 
@@ -119,17 +119,17 @@ For treasuries, direct stakers, custody operations, and risk teams holding HYPE 
 
 **Contents**
 
-- **Composite portfolio score** (0–100), stake-weighted blend across the institution's holdings.
-- **Sub-score breakdown**:
+- **Composite portfolio score** (0–100), stake weighted blend across the institution's holdings.
+- **Sub score breakdown**:
   - **Reliability** (50% weight), 30-day uptime, jail event count, longest jail, reward variance, time since last incident.
   - **Stake Quality** (25% weight), delegator count, net stake flow, retention, concentration.
-  - **Yield Quality** (25% weight), commission-adjusted realized APR, APR consistency, tracking error vs theoretical.
+  - **Yield Quality** (25% weight), commission adjusted realized APR, APR consistency, tracking error vs theoretical.
 - **30-day performance summary**: aggregate uptime, net realized APR, jail incidents, validators monitored.
-- **Portfolio composition table**: per-validator allocation, individual sub-scores, individual composite.
-- **Position notes**: narrative flags for holdings-specific concerns (elevated commission rates, pre-jail degradation indicators, anomalous yield drag).
+- **Portfolio composition table**: per validator allocation, individual sub scores, individual composite.
+- **Position notes**: narrative flags for holdings specific concerns (elevated commission rates, pre jail degradation indicators, anomalous yield drag).
 - **Risk exposure assessment**:
-  - **Halt-quorum exposure**: whether the holding's validators sit within the smallest set reaching the `>⅓` threshold of total network stake.
-  - **Jail recovery exposure**: exposure to long-tail jail events relative to the network base rate.
+  - **Halt quorum exposure**: whether the holding's validators sit within the smallest set reaching the `>⅓` threshold of total network stake.
+  - **Jail recovery exposure**: exposure to long tail jail events relative to the network base rate.
   - **Commission risk**: bounds on future commission increases per Hyperliquid protocol rules.
 - **Methodology and limitations summary** with version pin.
 
@@ -147,10 +147,10 @@ For LST issuers, holders performing due diligence, and consumers (DeFi protocols
 
 - **Audit summary**:
   - Portfolio concentration (top-3 share, against theoretical maximum diversification across the active set).
-  - Portfolio composite score (stake-weighted) vs network median and the lowest-scored LST in the coverage universe.
+  - Portfolio composite score (stake weighted) vs network median and the lowest scored LST in the coverage universe.
   - Reliability across portfolio (aggregate uptime, jail event count over the data window).
 - **Headline metrics**: composite, aggregate uptime, top-3 concentration, realized APR after commission.
-- **Validator portfolio table**: per-delegation weight, uptime, individual composite.
+- **Validator portfolio table**: per delegation weight, uptime, individual composite.
 - **Network benchmark**: portfolio metrics vs network median and theoretical max.
 - **Methodology and limitations summary** with version pin.
 
@@ -163,7 +163,7 @@ For LST issuers, holders performing due diligence, and consumers (DeFi protocols
 - **Document ID** for reference.
 - **Issuer**: QuickNode Hyperliquid Staking Intelligence.
 
-Audit consumers can verify any score in the report by cross-referencing the published methodology document at the matching version, the on-chain data via the cited QuickNode endpoints, and the methodology hash.
+Audit consumers can verify any score in the report by cross referencing the published methodology document at the matching version, the on chain data via the cited QuickNode endpoints, and the methodology hash.
 
 ### Engagement
 
@@ -171,4 +171,4 @@ Reports are produced on engagement. For validator quality attestations, LST port
 
 ## See also
 
-- [Methodology](/methodology), full scoring methodology, sub-score weights and formulas, consensus terminology citations.
+- [Methodology](/methodology), full scoring methodology, sub score weights and formulas, consensus terminology citations.
