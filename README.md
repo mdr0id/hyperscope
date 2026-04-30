@@ -4,6 +4,24 @@ Neutral validator scoring & LST audit on Hyperliquid. Methodology documented, 21
 
 > Hyperscope doesn't custody, validate, or issue tokens. The value is the methodology + data depth + live freshness, packaged for institutional due diligence. Adjacent to [Hyperpulse](https://www.hyperpulse.fyi/) on the trader side, on the same data substrate.
 
+## Screenshots
+
+![Main dashboard with the Quorum Ring, stake concentration, and live event feed](./docs/screenshots/dashboard.png)
+
+*Main dashboard. Quorum Ring with orbs sized by stake, stake concentration with the documented HyperBFT thresholds, and a live event feed driven by the gRPC stream.*
+
+![Validator leaderboard sorted by composite score](./docs/screenshots/leaderboard.png)
+
+*All validators in a sortable comparison table. Composite score, stake, uptime, APR, and a 60 minute heartbeat tape per row.*
+
+![Per validator drill down with sub score breakdown, heartbeat, and 90 day jail timeline](./docs/screenshots/validator-detail.png)
+
+*Per validator drill down. Composite score with reliability, stake quality, and yield quality components. 60 minute heartbeat. 90 day jail timeline with the underlying streak data.*
+
+![Per user staking activity page with delegations and recent events](./docs/screenshots/user-staking.png)
+
+*Per user staking activity. Net delegated, active delegations, deposit balance, and the last 30 days of staking events for one address.*
+
 ## Stack
 
 - Next.js 15 App Router · TypeScript (strict)
