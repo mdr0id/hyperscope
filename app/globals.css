@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 14% 6%;
+    --foreground: 220 9% 96%;
+    --muted: 220 14% 12%;
+    --muted-foreground: 220 9% 60%;
+    --card: 220 14% 8%;
+    --card-foreground: 220 9% 96%;
+    --border: 220 14% 16%;
+    --ring: 212 80% 60%;
+    --primary: 212 80% 60%;
+    --primary-foreground: 220 14% 6%;
+  }
+
+  html,
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  body {
+    font-feature-settings: "cv11", "ss01";
+  }
+}
