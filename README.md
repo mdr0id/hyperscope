@@ -2,7 +2,7 @@
 
 Neutral validator scoring & LST audit on Hyperliquid. Methodology documented, 212-day historical depth via QuickNode SQL Explorer, live freshness via QuickNode gRPC. Built for institutional consumers, ETP issuers, custodians, institutional staking products, risk teams. Not retail trader analytics.
 
-> Hyperscope doesn't custody, validate, or issue tokens. The value is the methodology + data depth + live freshness, packaged for institutional due diligence. Adjacent to [Hyperpulse](https://www.hyperpulse.fyi/) on the trader side, on the same data substrate.
+> Hyperscope doesn't custody, validate, or issue tokens. The value is the methodology + data depth + live freshness, packaged for institutional due diligence.
 
 ## Stack
 

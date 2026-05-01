@@ -8,7 +8,7 @@
 
 **Positioning.** Neutral data infrastructure — Moody's for Hyperliquid validators. We don't custody, validate, or issue tokens. Our value is methodology + historical depth (212 days) + live freshness, packaged for institutional consumption.
 
-**Non-goal.** Trader analytics. Hyperpulse (https://www.hyperpulse.fyi/) covers the trader-facing perp/volume/liquidation slice on the same QuickNode data substrate. This project is explicitly the staking/validator side that Hyperpulse does not cover.
+**Non-goal.** Trader analytics. The trader-facing perp/volume/liquidation slice is out of scope. This project is explicitly the staking/validator side: validator scoring, jail history, stake concentration, and LST audit.
 
 ## 2. Tech stack (use exactly this)
 

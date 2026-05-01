@@ -88,7 +88,7 @@ export default async function ValidatorDetailPage({
         <StatusBadge status={validator.status} />
       </header>
 
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Stat
           label="Stake"
           value={`${formatHype(validator.stake_hype)} HYPE`}
@@ -100,6 +100,14 @@ export default async function ValidatorDetailPage({
         <Stat
           label="Commission"
           value={formatPct(commissionPct(validator.commission_bps))}
+        />
+        <Stat
+          label="Reward 24h"
+          value={
+            validator.reward_24h != null
+              ? `${formatHype(validator.reward_24h)} HYPE`
+              : "—"
+          }
         />
         <Stat
           label="Implied APR"

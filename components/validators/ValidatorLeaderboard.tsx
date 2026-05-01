@@ -17,7 +17,7 @@ import type {
   ValidatorHeartbeatRow,
 } from "@/lib/quicknode/types";
 
-type SortKey = "score" | "stake" | "uptime" | "apr";
+type SortKey = "score" | "stake" | "uptime" | "apr" | "reward";
 
 interface Props {
   initialValidators: ValidatorScorecardRow[];
@@ -46,6 +46,8 @@ export function ValidatorLeaderboard({ initialValidators }: Props) {
       return (b.uptime_pct ?? 0) - (a.uptime_pct ?? 0);
     if (sortKey === "apr")
       return (b.implied_apr_pct ?? 0) - (a.implied_apr_pct ?? 0);
+    if (sortKey === "reward")
+      return (b.reward_24h ?? 0) - (a.reward_24h ?? 0);
     return (
       (scores[b.validator]?.total ?? 0) - (scores[a.validator]?.total ?? 0)
     );
@@ -75,6 +77,9 @@ export function ValidatorLeaderboard({ initialValidators }: Props) {
                 <th className="px-3 py-2 text-left font-medium">Validator</th>
                 <th className="px-3 py-2 text-right font-medium">Score</th>
                 <th className="px-3 py-2 text-right font-medium">Stake</th>
+                <th className="px-3 py-2 text-right font-medium">
+                  Reward 24h
+                </th>
                 <th className="px-3 py-2 text-right font-medium">Uptime</th>
                 <th className="px-3 py-2 text-right font-medium">APR</th>
                 <th className="hidden px-3 py-2 text-left font-medium md:table-cell">
@@ -123,6 +128,9 @@ export function ValidatorLeaderboard({ initialValidators }: Props) {
                     </td>
                     <td className="px-3 py-2 text-right font-mono">
                       {formatHype(v.stake_hype)}
+                    </td>
+                    <td className="px-3 py-2 text-right font-mono">
+                      {v.reward_24h != null ? formatHype(v.reward_24h) : "—"}
                     </td>
                     <td className="px-3 py-2 text-right font-mono">
                       {formatPct(v.uptime_pct)}
@@ -188,6 +196,7 @@ function SortToggle({ value, onChange }: SortToggleProps) {
   const options: { key: SortKey; label: string }[] = [
     { key: "score", label: "Score" },
     { key: "stake", label: "Stake" },
+    { key: "reward", label: "Reward" },
     { key: "uptime", label: "Uptime" },
     { key: "apr", label: "APR" },
   ];
